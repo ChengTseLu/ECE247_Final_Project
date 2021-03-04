@@ -6,6 +6,8 @@ from plot import Plot
 if __name__ == "__main__":
     data = Data()
     data.setup(True)
+    # data.data_filtering()
+    # data.data_augment()
     dataset = data.get_dataset()
 
     models = Model(dataset[0].shape[1:], 50)
