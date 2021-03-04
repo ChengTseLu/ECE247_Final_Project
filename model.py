@@ -26,6 +26,7 @@ class Model:
                 # Memory growth must be set before GPUs have been initialized
                 print(e)
 
+    # TA's example
     def rnn1(self):
 
         model = models.Sequential()
@@ -41,6 +42,7 @@ class Model:
 
         return model
     
+    # TA's example
     def rnn2(self):
 
         # Equivalent functional declaration:
@@ -59,6 +61,8 @@ class Model:
 
         return model
 
+    # TA's example
+    # 62% accuracy (max: 66%)
     def ShallowConvNet(self):
 
         inputs = layers.Input(shape=(22, 1000))
@@ -90,41 +94,143 @@ class Model:
 
         return model
 
-    def rnn_LSTM(self):
+    # 65 % accuracy (max: 68%)
+    def cnn1(self):
 
         inputs = layers.Input(shape=self.input_dim)
 
+        # [conv -> elu -> bn] x3 -> avg_pool -> dp -> fc
         r1 = layers.Reshape((22, 1000, 1))(inputs)
             # (N, 22, 1000) -> (N, 22, 1000, 1)
-        c1 = layers.Conv2D(40, (1, 25), activation='elu', data_format='channels_last')(r1)
-            # (N, 22, 1000, 1) -> (N, 22, 976, 40), i.e. NHWC -> NHWC. 'channels_last' is default
-        p1 = layers.Permute((2, 1, 3))(c1)
-            # (N, 22, 976, 40) -> (N, 976, 22, 40)
-        r2 = layers.Reshape((976, 22*40))(p1)
-            # (N, 976, 22, 40) -> (N, 976, 22*40)
-        d1 = layers.Dense(40, activation='elu')(r2)
-            # (N, 976, 22*40) -> (N, 976, 40)
-            # weight_shape = 22*40 x 40 = 35200
-            # bias_shape = 40
-        sq1 = layers.Activation(Ksquare)(d1)
-        ap1 = layers.AveragePooling1D(75, strides=15)(sq1)
-            # (N, 976, 40) -> (N, 61, 40)
-        log1 = layers.Activation(Klog)(ap1)
-        f1 = layers.Flatten()(log1)
-            # (N, 61, 40) -> (N, 61*40) 
-        
-        r3 = layers.Reshape((61*40, 1))(f1)
-        
-        lstm1 = layers.LSTM(10)(r3)
-        dp1 = layers.Dropout(0.2)(lstm1)
+        c1 = layers.Conv2D(25, (1, 10), activation='elu', data_format='channels_last')(r1)
+            # (N, 22, 1000, 1) -> (N, 22, 991, 25), i.e. NHWC -> NHWC. 'channels_last' is default
+        b1 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c1)
+            # (N, 22, 991, 25) -> (N, 22, 991, 25)
+        c2 = layers.Conv2D(25, (3, 3), activation='elu', data_format='channels_last')(b1)
+            # (N, 22, 991, 25) -> (N, 20, 989, 25)
+        b2 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c2)
+            # (N, 20, 989, 25) -> (N, 20, 989, 25)
+        c3 = layers.Conv2D(25, (18, 1), activation='elu', data_format='channels_last')(b2)
+            # (N, 20, 989, 25) -> (N, 3, 989, 25)
+        b3 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c3)
+            # (N, 3, 989, 25) -> (N, 3, 989, 25)
+        p1 = layers.Permute((2, 1, 3))(b3)
+            # (N, 3, 989, 25) -> (N, 989, 3, 25)
+        r1 = layers.Reshape((989, 3*25))(p1)
+            # (N, 989, 3, 25) -> (N, 989, 3*25)
+        mp1 = layers.AveragePooling1D(74, strides=15)(r1)
+            # (N, 989, 75) -> (N, 62, 75)
+        dp1 = layers.Dropout(0.2)(mp1)
+        f1 = layers.Flatten()(dp1)
+            # (N, 62, 75) -> (N, 62*75)
 
-        outputs = layers.Dense(4, activation='softmax', kernel_regularizer=L1(0.01), activity_regularizer=L2(0.01))(dp1)
+        outputs = layers.Dense(4, activation='softmax', kernel_regularizer=L1(0.01), activity_regularizer=L2(0.01))(f1)
         
-        model = models.Model(inputs=inputs, outputs=outputs, name='LSTM')
+        model = models.Model(inputs=inputs, outputs=outputs, name='cnn1')
+
+        return model
+
+    # 69% accuracy (max: 72%)
+    def cnn2(self):
+
+        inputs = layers.Input(shape=self.input_dim)
+
+        # [conv -> conv -> elu -> bn -> dp] x3 -> avg_pool -> fc
+        r1 = layers.Reshape((22, 1000, 1))(inputs)
+            # (N, 22, 1000) -> (N, 22, 1000, 1)
+        c1 = layers.Conv2D(20, (1, 10), activation='elu', data_format='channels_last')(r1)
+            # (N, 22, 1000, 1) -> (N, 22, 991, 40), i.e. NHWC -> NHWC. 'channels_last' is default
+        c11 = layers.Conv2D(20, (3, 3), activation='elu', data_format='channels_last')(c1)
+            # (N, 20, 989, 40) -> (N, 22, 989, 40), i.e. NHWC -> NHWC. 'channels_last' is default
+        b1 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c11)
+            # (N, 20, 989, 40) -> (N, 20, 989, 40)
+        dp1 = layers.Dropout(0.1)(b1)
+
+        c2 = layers.Conv2D(20, (3, 3), activation='elu', data_format='channels_last')(dp1)
+            # (N, 20, 989, 20) -> (N, 18, 987, 20)
+        c22 = layers.Conv2D(20, (16, 3), activation='elu', data_format='channels_last')(c2)
+            # (N, 18, 987, 20) -> (N, 3, 985, 20)
+        b2 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c22)
+            # (N, 3, 985, 20) -> (N, 3, 985, 20)
+        dp2 = layers.Dropout(0.1)(b2)
+
+        c3 = layers.Conv2D(20, (1, 3), activation='elu', data_format='channels_last')(dp2)
+            # (N, 3, 985, 20) -> (N, 3, 982, 20)
+        c33 = layers.Conv2D(20, (1, 10), activation='elu', data_format='channels_last')(c3)
+            # (N, 3, 982, 20) -> (N, 3, 974, 20)
+        b3 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c33)
+            # (N, 3, 974, 20) -> (N, 3, 974, 20)
+        dp3 = layers.Dropout(0.1)(b3)
+
+        p1 = layers.Permute((2, 1, 3))(dp3)
+            # (N, 3, 974, 20) -> (N, 974, 3, 20)
+        r1 = layers.Reshape((974, 3*20))(p1)
+            # (N, 974, 3, 20) -> (N, 974, 3*20)
+        mp1 = layers.AveragePooling1D(74, strides=15)(r1)
+            # (N, 974, 60) -> (N, 61, 60)
+
+        f1 = layers.Flatten()(mp1)
+            # (N, 61, 60) -> (N, 61*60)
+
+        outputs = layers.Dense(4, activation='softmax', kernel_regularizer=L1(0.01), activity_regularizer=L2(0.01))(f1)
+        
+        model = models.Model(inputs=inputs, outputs=outputs, name='cnn3')
+
+        return model
+
+    # 69% accuracy (max: 72%)
+    def cnn3(self):
+
+        inputs = layers.Input(shape=self.input_dim)
+
+        # [conv -> conv -> elu -> bn -> dp] x2 -> avg_pool -> fc
+        r1 = layers.Reshape((22, 1000, 1))(inputs)
+            # (N, 22, 1000) -> (N, 22, 1000, 1)
+        c1 = layers.Conv2D(20, (1, 10), activation='elu', data_format='channels_last')(r1)
+            # (N, 22, 1000, 1) -> (N, 22, 991, 40), i.e. NHWC -> NHWC. 'channels_last' is default
+        c11 = layers.Conv2D(20, (3, 3), activation='elu', data_format='channels_last')(c1)
+            # (N, 20, 989, 40) -> (N, 22, 989, 40), i.e. NHWC -> NHWC. 'channels_last' is default
+        b1 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c11)
+            # (N, 20, 989, 40) -> (N, 20, 989, 40)
+        dp1 = layers.Dropout(0.1)(b1)
+
+        c2 = layers.Conv2D(20, (3, 3), activation='elu', data_format='channels_last')(dp1)
+            # (N, 20, 989, 20) -> (N, 18, 987, 20)
+        c22 = layers.Conv2D(20, (16, 3), activation='elu', data_format='channels_last')(c2)
+            # (N, 18, 987, 20) -> (N, 3, 985, 20)
+        b2 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c22)
+            # (N, 3, 985, 20) -> (N, 3, 985, 20)
+        dp2 = layers.Dropout(0.1)(b2)
+
+        # c3 = layers.Conv2D(20, (1, 3), activation='elu', data_format='channels_last')(dp2)
+        #     # (N, 3, 985, 20) -> (N, 3, 982, 20)
+        # c33 = layers.Conv2D(20, (1, 10), activation='elu', data_format='channels_last')(c3)
+        #     # (N, 3, 982, 20) -> (N, 3, 974, 20)
+        # b3 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c33)
+        #     # (N, 3, 974, 20) -> (N, 3, 974, 20)
+        # dp3 = layers.Dropout(0.1)(b3)
+
+        p1 = layers.Permute((2, 1, 3))(dp2)
+            # (N, 3, 974, 20) -> (N, 974, 3, 20)
+        r1 = layers.Reshape((985, 3*20))(p1)
+            # (N, 974, 3, 20) -> (N, 974, 3*20)
+        mp1 = layers.AveragePooling1D(75, strides=10)(r1)
+            # (N, 974, 60) -> (N, 181, 60)
+
+        lstm = layers.LSTM(25, return_sequences=True, dropout=0.1, recurrent_dropout=0.1)(mp1)
+            # (N, 91, 60) -> (N, 91, 50)
+
+        f1 = layers.Flatten()(lstm)
+            # (N, 91, 50) -> (N, 91*50)
+
+        outputs = layers.Dense(4, activation='softmax', kernel_regularizer=L1(0.01), activity_regularizer=L2(0.01))(f1)
+        
+        model = models.Model(inputs=inputs, outputs=outputs, name='cnn3')
 
         return model
 
 if __name__ == "__main__":
     model = Model((22, 1000), 20)
-    rnn = model.rnn1()
+    rnn = model.cnn3()
+    rnn.compile('adam', 'sparse_categorical_crossentropy', metrics=['acc'])
     rnn.summary()

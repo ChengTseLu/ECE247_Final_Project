@@ -11,10 +11,10 @@ if __name__ == "__main__":
     dataset = data.get_dataset()
 
     models = Model(dataset[0].shape[1:], 50)
-    m = models.rnn_LSTM()
+    m = models.cnn3()
     m.summary()
 
-    train = Train(m, dataset, 50, 300, 'adam', 'sparse_categorical_crossentropy')
+    train = Train(m, dataset, 50, 150, 'adam', 'sparse_categorical_crossentropy')
     train.training()
     train.evaluate()
 

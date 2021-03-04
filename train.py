@@ -18,8 +18,6 @@ class Train:
         self.tensorboard_callback = keras.callbacks.TensorBoard(log_dir=self.logdir)
         self.loss_hist = self.model.fit(self.Xtrain, self.ytrain, batch_size=self.batch_size, validation_data=(self.Xval, self.yval), epochs=self.epochs, callbacks=[self.tensorboard_callback])
 
-        #return self.tensorboard_callback, self.loss_hist
-
     def evaluate(self):
         figure = Plot(self.loss_hist)
         figure.draw()
