@@ -37,6 +37,7 @@ class Data:
         yval = y_train_valid[perm[numTrain: ]]
 
         self.dataset = [Xtrain, ytrain, Xval, yval]
+        self.testset = [X_test, y_test, person_train_valid, person_test]
 
     def data_filtering(self):
         pass
@@ -44,12 +45,17 @@ class Data:
     def data_augment(self):
         pass
 
+    def data_addNoise(self, mean=0, std=1):
+        self.dataset[0] += np.random.normal(loc=mean, scale=std, size=self.dataset[0].shape)
+
     def get_dataset(self):
         return self.dataset
 
+    def get_testset(self):
+        return self.testset
 
 if __name__ == "__main__":
     data = Data()
     data.setup(True)
-    data.data_filtering()
+    data.data_addNoise()
     

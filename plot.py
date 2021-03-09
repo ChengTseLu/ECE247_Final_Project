@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 
 class Plot:
-    def __init__(self, loss_hist):
+    def __init__(self, loss_hist, dataset=None):
         self.hist = loss_hist.history
+        self.dataset = dataset
 
     def draw(self):
         plt.figure(figsize=(15, 7))
@@ -21,3 +22,6 @@ class Plot:
         plt.legend(['train', 'val'])
 
         plt.show()
+
+    def test(self):
+        plt.figure()
