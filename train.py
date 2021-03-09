@@ -20,7 +20,7 @@ class Train:
 
     def evaluate(self):
         figure = Plot(self.loss_hist)
-        figure.draw()
+        figure.show_loss()
 
     def get_loss_history(self):
         return self.tensorboard_callback, self.loss_hist

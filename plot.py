@@ -7,7 +7,7 @@ class Plot:
             self.hist = loss_hist.history
         self.dataset = dataset
 
-    def draw(self):
+    def show_loss(self):
         plt.figure(figsize=(15, 7))
         plt.subplot(1, 2, 1)
         plt.plot(self.hist['loss'])
