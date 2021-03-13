@@ -187,9 +187,9 @@ class Model:
         r1 = layers.Reshape((22, 1000, 1))(inputs)
             # (N, 22, 1000) -> (N, 22, 1000, 1)
         c1 = layers.Conv2D(20, (1, 10), data_format='channels_last')(r1)
-            # (N, 22, 1000, 1) -> (N, 22, 991, 20), i.e. NHWC -> NHWC. 'channels_last' is default
+            # (N, 22, 1000, 1) -> (N, 22, 991, 20)
         c11 = layers.Conv2D(20, (3, 3), data_format='channels_last')(c1)
-            # (N, 20, 989, 20) -> (N, 22, 989, 20), i.e. NHWC -> NHWC. 'channels_last' is default
+            # (N, 20, 989, 20) -> (N, 22, 989, 20)
         b1 = layers.BatchNormalization(momentum=0.9, epsilon=1e-05)(c11)
         elu1 = layers.Activation('elu')(b1)
             # (N, 20, 989, 20) -> (N, 20, 989, 20)
@@ -229,7 +229,7 @@ class Model:
 
         return model
 
-    # 65% accuracy (max: 67%)
+    # 64% accuracy (max: 66%)
     def ResNet(self):
 
         inputs = layers.Input(shape=self.input_dim)
@@ -250,10 +250,10 @@ class Model:
             con = layers.add([elu, b2])
             elu = layers.Activation('elu')(con)
 
-        c4 = layers.Conv2D(20, (18, 1), activation='elu', data_format='channels_last')(elu)
+        #c4 = layers.Conv2D(20, (18, 1), activation='elu', data_format='channels_last')(elu)
 
-        p1 = layers.Permute((2, 1, 3))(c4)
-        r1 = layers.Reshape((991, 5*20))(p1)
+        p1 = layers.Permute((2, 1, 3))(elu)
+        r1 = layers.Reshape((991, 22*20))(p1)
         mp1 = layers.AveragePooling1D(76, strides=15)(r1)
 
         f1 = layers.Flatten()(mp1)
@@ -264,8 +264,22 @@ class Model:
 
         return model
 
+    def test(self):
+        inputs = layers.Input(shape=self.input_dim)
+
+        r1 = layers.Reshape((100, 100, 1))(inputs)
+        c1 = layers.Conv2D(20, (1, 3), data_format='channels_last')(r1)
+        c1 = layers.Conv2D(20, (3, 1), data_format='channels_last')(c1)
+
+        outputs = layers.Dense(4, activation='softmax', kernel_regularizer=L1(0.01), activity_regularizer=L2(0.01))(c1)
+        
+        model = models.Model(inputs=inputs, outputs=outputs, name='cnn3')
+
+        return model
+
+
+
 if __name__ == "__main__":
-    model = Model((22, 1000), 20)
-    rnn = model.ResNet()
-    rnn.compile('adam', 'sparse_categorical_crossentropy', metrics=['acc'])
+    model = Model((100, 100), 20)
+    rnn = model.test()
     rnn.summary()

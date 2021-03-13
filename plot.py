@@ -2,10 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Plot:
-    def __init__(self, loss_hist=None, dataset=None):
+    def __init__(self, loss_hist=None):
         if loss_hist != None:
             self.hist = loss_hist.history
-        self.dataset = dataset
 
     def show_loss(self):
         plt.figure(figsize=(15, 7))
@@ -25,10 +24,10 @@ class Plot:
 
         plt.show()
 
-    def show_dataset(self):
+    def show_dataset(self, dataset):
         plt.figure()
 
-        avg = np.mean(self.dataset[0], axis=0)
+        avg = np.mean(dataset, axis=0)
         name = []
         i = 0
         for channel in avg:

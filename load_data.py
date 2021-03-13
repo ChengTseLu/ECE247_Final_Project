@@ -1,5 +1,5 @@
 import numpy as np
-
+from plot import Plot
 
 class Data:
     def __init__(self, data_path="project"):
@@ -53,6 +53,10 @@ class Data:
 
     def get_testset(self):
         return self.testset
+
+    def plot_dataset(self):
+        figure = Plot()
+        figure.show_dataset(self.dataset[0])
 
 if __name__ == "__main__":
     data = Data()
