@@ -6,19 +6,19 @@ from train import Train
 if __name__ == "__main__":
 
     data = Data()
-    data.setup(True)
-    # data.data_filtering()
-    # data.data_augment()
-    # data.data_addNoise(0, 2)
-    # data.plot_dataset()
+    data.load()
+    data.data_augment()
+    data.data_splitting()
+    data.print()
     dataset = data.get_dataset()
+    testset = data.get_testset()
     
-
     models = Model(dataset[0].shape[1:], 50)
-    m = models.cnn2()
+    m = models.ResNet()
     m.summary()
 
-    train = Train(m, dataset, 50, 50, 'adam', 'sparse_categorical_crossentropy')
+    # train = Train(m, dataset, testset, 50, 32, 'adam', 'sparse_categorical_crossentropy')
+    train = Train(m, dataset, testset, 100, 200, 'adam', 'categorical_crossentropy')
     train.training()
     train.evaluate()
 
@@ -26,4 +26,3 @@ if __name__ == "__main__":
 
 
 # tensorboard --logdir logs/scalars --port=7000
-

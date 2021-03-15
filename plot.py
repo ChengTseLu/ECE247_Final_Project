@@ -24,10 +24,10 @@ class Plot:
 
         plt.show()
 
-    def show_dataset(self, dataset):
-        plt.figure()
+    # plot data in terms of channels
+    def show_X(self, X):
 
-        avg = np.mean(dataset, axis=0)
+        avg = np.mean(X, axis=0)
         name = []
         i = 0
         for channel in avg:
@@ -38,4 +38,27 @@ class Plot:
         plt.legend(name)
         plt.show()
 
-        
+    # plot data in terms of classes
+    def show_y(self, X, y):
+        plt_lst = [221, 222, 223, 224]
+        name = ['Left Hand', 'Right Hand', 'Foot', 'Tongue']
+
+        y_ = np.argmax(y, axis=1)
+        for i in range(4):
+            X_sub = np.mean(X[y_==i], axis=(0,1))
+
+            plt.subplot(plt_lst[i])
+            plt.plot(X_sub)
+            plt.title(name[i])
+
+
+        plt.show()
+
+    def show_dif(self, X, name):
+        for d in X:
+            print(d.shape)
+            avg_d = np.mean(d, axis=(0,1))
+            plt.plot(avg_d)
+
+        plt.legend(name)
+        plt.show()
